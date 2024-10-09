@@ -11,15 +11,20 @@ import {
   addDoc,
   orderBy,
   query,
-  onSnapshot
+  onSnapshot,
+  where,
+  getDocs,
+  Firestore
 } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, database } from '../config/firebase';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import colors from '../colors';
 import { LinearGradient } from 'expo-linear-gradient';
 const Chat = () => {
+  const route = useRoute();
+  const { title } = route.params;
   const [messages, setMessages] = useState([]);
   const navigation = useNavigation(); 
 
@@ -44,9 +49,12 @@ const Chat = () => {
     });
   }, [navigation]);
 
+  
+
   useLayoutEffect(() => {
     const collectionRef = collection(database,'chats');
-    const q = query(collectionRef, orderBy('createdAt', 'desc'));
+    const q = query(collectionRef, orderBy('createdAt', 'desc'), where('room', '==', title));  
+    // const q = query(collectionRef, orderBy('createdAt', 'desc'));  
 
     const unsubscribe = onSnapshot(q,snapshot =>{
         console.log('snapshot')
@@ -54,29 +62,48 @@ const Chat = () => {
         setMessages(snapshot.docs.map(doc=>({
             _id: doc.id,
             createdAt: doc.data().createdAt.toDate(),
-            text: doc.data().text,
-            user: doc.data().user
+            text: doc.data().text ,
+            user: doc.data().user,
+            room:title
         })));
     })
 
     return () => unsubscribe();
   }, []);
 
-  const onSend = useCallback((messages = []) => {
+  const onSend = useCallback(async (messages = []) => {
     setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
 
     const { _id, createdAt, text, user } = messages[0];
-    addDoc(collection(database, 'chats'), {
-      _id,
-      createdAt,
-      text,
-      user
-    });
 
+    try {
+      // Add the message to the 'chats' collection
+      await addDoc(collection(database, 'chats'), {
+        _id,
+        createdAt,
+        text,
+        user,
+        room: title
+      });
 
+      // // Add only the message text to the 'rooms' collection
+      // await addDoc(collection(database, 'rooms'), {
+      //   text
+      // });
+
+      // Create a new collection with the message text as the collection name and add the message to it
+      // await addDoc(collection(database, title), {
+      //   _id,
+      //   createdAt,
+      //   text,
+      //   user,
+      //   room: title
+      // });
+
+    } catch (e) {
+      console.error('Error adding document: ', e);
+    }
   }, []);
-
-
 
   const renderBubble = (props) => (
     <Bubble
