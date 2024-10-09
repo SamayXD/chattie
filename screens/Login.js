@@ -2,21 +2,24 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View, Button, TextInput, Image, SafeAreaView, TouchableOpacity, StatusBar, Alert } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebase";
+import { ActivityIndicator } from "react-native";
 const backImage = require("../assets/backImage.png");
 
 export default function Login({ navigation }) {
-
+  const [loading, setLoading] = useState(false);  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const onHandleLogin = () => {
+    setLoading(true);
     if (email !== "" && password !== "") {
       signInWithEmailAndPassword(auth, email, password)
         .then(() => console.log("Login success"))
-        .catch((err) => Alert.alert("Login error", err.message));
+        .catch((err) => Alert.alert("Login error", err.message))
+        .finally(() => setLoading(false));
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Image source={backImage} style={styles.backImage} />
@@ -44,7 +47,11 @@ export default function Login({ navigation }) {
         onChangeText={(text) => setPassword(text)}
       />
       <TouchableOpacity style={styles.button} onPress={onHandleLogin}>
-        <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 18}}> Log In</Text>
+        <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 18}}> 
+          {loading ? 
+          <ActivityIndicator size="small" color="#fff" />
+          : "Log In"}
+        </Text>
       </TouchableOpacity>
       <View style={{marginTop: 20, flexDirection: 'row', alignItems: 'center', alignSelf: 'center'}}>
         <Text style={{color: 'gray', fontWeight: '600', fontSize: 14}}>Don't have an account? </Text>

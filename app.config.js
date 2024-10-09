@@ -20,11 +20,12 @@ export default {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },  "package": "com.athingstudio.chattie",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
   },
   extra: {
     apiKey: process.env.API_KEY,
